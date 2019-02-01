@@ -41,13 +41,23 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
+        tmp = data.split()
+        if(len(tmp) > 0):
+            return int(tmp[1])
         return None
 
     def get_headers(self,data):
-        return None
+        tmp = data.split("\r\n\r\n")
+        if(len(tmp) > 2):
+            return tmp[0]
+        return ""
 
     def get_body(self, data):
-        return None
+        tmp = data.split("\r\n\r\n")
+        print(tmp)
+        if(len(tmp) > 2):
+            return tmp[1]
+        return ""
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -67,12 +77,49 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
 
+    def get_port(self, parsed_url):
+        print("get port: {}".format(parsed_url.port))
+        if(parsed_url.port):
+            return parsed_url.port
+        else:
+            return 80
+
     def GET(self, url, args=None):
         code = 500
         body = ""
+
+        # if("http://" not in url):
+        #     url = "http://" + url
+        parsed_url = urllib.parse.urlparse(url)
+        print(parsed_url)
+
+        host = parsed_url.hostname
+        self.connect(host, self.get_port(parsed_url))
+
+        path = parsed_url.path
+        if(parsed_url.path == ""):
+            path = "/"
+
+        query = ""
+        if(parsed_url.query):
+            query = "?"+parsed_url.query
+
+        payload = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path+query, host)
+        print(payload)
+        print("~~~~~~~~~~")
+        self.sendall(payload)
+        full_data = self.recvall(self.socket)
+        print(full_data)
+        self.close()
+    
+        code = self.get_code(full_data)
+        body = full_data #self.get_body(full_data)
+
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
+        print(url)
+        print(args)
         code = 500
         body = ""
         return HTTPResponse(code, body)
