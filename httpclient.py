@@ -47,9 +47,9 @@ class HTTPClient(object):
         return None
 
     def get_headers(self,data):
-        tmp = data.split("\r\n\r\n")
-        if(len(tmp) > 2):
-            return tmp[0]
+        # tmp = data.split("\r\n\r\n")
+        # if(len(tmp) > 2):
+        #     return tmp[0]
         return ""
 
     def get_body(self, data):
@@ -77,12 +77,32 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
 
-    def get_port(self, parsed_url):
+    def get_port(self, url):
+        parsed_url = urllib.parse.urlparse(url)
         print("get port: {}".format(parsed_url.port))
         if(parsed_url.port):
             return parsed_url.port
         else:
             return 80
+
+    def get_url_content(self, url):        
+        parsed_url = urllib.parse.urlparse(url)
+        print(parsed_url)
+
+        host = parsed_url.hostname
+        
+
+        path = parsed_url.path
+        if(parsed_url.path == ""):
+            path = "/"
+
+        #query = ""
+        if(parsed_url.query):
+            #query = "?"+parsed_url.query
+            path += "?"+parsed_url.query
+        
+        return path, host
+
 
     def GET(self, url, args=None):
         code = 500
@@ -90,21 +110,11 @@ class HTTPClient(object):
 
         # if("http://" not in url):
         #     url = "http://" + url
-        parsed_url = urllib.parse.urlparse(url)
-        print(parsed_url)
+        path, host = self.get_url_content(url)
 
-        host = parsed_url.hostname
-        self.connect(host, self.get_port(parsed_url))
+        self.connect(host, self.get_port(url))
 
-        path = parsed_url.path
-        if(parsed_url.path == ""):
-            path = "/"
-
-        query = ""
-        if(parsed_url.query):
-            query = "?"+parsed_url.query
-
-        payload = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path+query, host)
+        payload = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path, host)
         print(payload)
         print("~~~~~~~~~~")
         self.sendall(payload)
@@ -118,8 +128,6 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        print(url)
-        print(args)
         code = 500
         body = ""
         return HTTPResponse(code, body)
