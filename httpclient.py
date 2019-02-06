@@ -111,14 +111,14 @@ class HTTPClient(object):
         self.connect(host, self.get_port(url))
 
         payload = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path, host)
-
+        print(payload)
         self.sendall(payload)
         full_data = self.recvall(self.socket)
         self.close()
     
         code = self.get_code(full_data)
         body = self.get_body(full_data)
-
+        print(body)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
@@ -143,7 +143,7 @@ class HTTPClient(object):
     
         code = self.get_code(full_data)
         body = self.get_body(full_data)
-        
+        print(body)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
